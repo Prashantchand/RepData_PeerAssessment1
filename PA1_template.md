@@ -18,7 +18,8 @@ The dataset is stored in a comma-separated-value (CSV) file and there are a tota
 
 ## Loading and preprocessing the data
 Code for downloading the file
-```{r,echo=TRUE}
+
+```r
 filename<-"activity.zip"
 path<-getwd()
 if(!file.exists(filename)){
@@ -31,80 +32,123 @@ if(!file.exists("activity.csv")){
 ```
 
 Loading required package
-```{r,echo=TRUE}
+
+```r
 library(dplyr)
 library(ggplot2)
 ```
 
 Code for reading the file
-```{r,echo=TRUE}
+
+```r
 activitydata<-read.csv("activity.csv")
 ```
 
 ## What is mean total number of steps taken per day?
 Grouping the data by date so that we can find total no of steps
-```{r,echo=TRUE}
+
+```r
 total_steps_data<-activitydata %>%group_by(date)%>%summarise(total_steps=sum(steps))
 ```
 
 Histogram of the total number of steps taken each day
-```{r,echo=TRUE}
+
+```r
 hist(total_steps_data$total_steps,xlab = "Total Steps",col = "pink",breaks = 20)
 ```
 
+![plot of chunk unnamed-chunk-5](figure/unnamed-chunk-5-1.png)
+
 Mean and median number of steps taken each day
-```{r,echo=TRUE}
+
+```r
 total_steps_data %>%summarise(mean=mean(total_steps,na.rm = TRUE),median=median(total_steps,na.rm = TRUE))
+```
+
+```
+## # A tibble: 1 x 2
+##     mean median
+##    <dbl>  <int>
+## 1 10766.  10765
 ```
 
 ## What is the average daily activity pattern?
 Time series plot of the average number of steps taken
-```{r,echo=TRUE}
+
+```r
 average_steps_data<-activitydata[!is.na(activitydata$steps),] %>% group_by(interval) %>% summarise(average_steps=mean(steps))
 ggplot(average_steps_data,aes(y=average_steps,x=interval))+geom_line(color="purple",size=1)+labs(x="Interval",y="Average steps per day",title = "Average steps per day by interval")
 ```
 
+![plot of chunk unnamed-chunk-7](figure/unnamed-chunk-7-1.png)
+
 Which 5-minute interval, on average across all the days in the dataset, contains the maximum number of steps?
-```{r,echo=TRUE}
+
+```r
 average_steps_data[which.max(average_steps_data$average_steps),]$interval
 ```
 
+```
+## [1] 835
+```
+
 Calculate and report the total number of missing values in the dataset (i.e. the total number of rows with NAs)
-```{r,echo=TRUE}
+
+```r
 nrow(activitydata[is.na(activitydata$steps),])
+```
+
+```
+## [1] 2304
 ```
 
 ## Imputing missing values
 Code to describe and show a strategy for imputing missing data
 Imputing NAs using the medain of the dataset
-```{r,echo=TRUE}
+
+```r
 activitydata[is.na(activitydata$steps), ]$steps<-median(activitydata$steps,na.rm = TRUE)
 ```
 
 Writing new csv file 
-```{r}
+
+```r
 write.csv(activitydata,file = "newdata.csv")
 ```
 
 Histogram of the total number of steps taken each day after missing values are imputed
-```{r}
+
+```r
 new_total_steps<-activitydata %>% group_by(date) %>% summarise(total_steps=sum(steps))
 ggplot(new_total_steps,aes(total_steps))+geom_histogram(fill = "pink", binwidth = 1000)+labs(x="total steps",y="frequency",title = "Total steps per day")
 ```
 
+![plot of chunk unnamed-chunk-12](figure/unnamed-chunk-12-1.png)
+
 Do these values differ from the estimates from the first part of the assignment  
 New mean
-```{r}
+
+```r
 mean(new_total_steps$total_steps)
 ```
+
+```
+## [1] 9354.23
+```
 New median
-```{r}
+
+```r
 median(new_total_steps$total_steps)
+```
+
+```
+## [1] 10395
 ```
 
 ## Are there differences in activity patterns between weekdays and weekends?
 Create a new factor variable in the dataset with two levels – “weekday” and “weekend” indicating whether a given date is a weekday or weekend day.
-```{r}
+
+```r
 activitydata<-mutate(activitydata,day=weekdays(as.Date(activitydata$date)))
 activitydata$wday_wknd<-c("weekday","weekend")
 activitydata[grep("Monday|Tuesday|Wednesday|thursday|Friday",activitydata$day),]$wday_wknd<-"weekday"
@@ -113,7 +157,10 @@ activitydata$wday_wknd<-as.factor(activitydata$wday_wknd)
 ```
 
 Make a panel plot containing a time series plot (i.e.type="l") of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all weekday days or weekend days (y-axis)
-```{r}
+
+```r
 new_average_data<-activitydata %>% group_by(interval,wday_wknd) %>% summarise(average_steps=mean(steps))
 ggplot(new_average_data,aes(interval,average_steps,color=wday_wknd))+geom_line()+facet_grid(wday_wknd~.)+labs(x="Interval",y="No of steps",title = "Average no of steps by day")
 ```
+
+![plot of chunk unnamed-chunk-16](figure/unnamed-chunk-16-1.png)
